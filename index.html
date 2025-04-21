@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Tambahan Saldo DAS</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      background: white;
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+    }
+    input, button {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .result {
+      font-size: 1.2em;
+      background: #e0f7fa;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Kalkulator Tambahan Saldo DAS</h2>
+
+    <label for="tanggalAwal">Tanggal Awal Periode</label>
+    <input type="date" id="tanggalAwal" value="2025-01-01">
+
+    <label for="tanggalSetor">Tanggal Penyetoran Dana Tambahan</label>
+    <input type="date" id="tanggalSetor" value="2025-04-21">
+
+    <label for="tanggalTarget">Tanggal Target DAS Tercapai</label>
+    <input type="date" id="tanggalTarget" value="2025-04-30">
+
+    <label for="targetDas">Target Daily Average Saldo (Rp)</label>
+    <input type="number" id="targetDas" value="10000000">
+
+    <label for="dasSaatIni">DAS Saat Ini (Rp)</label>
+    <input type="number" id="dasSaatIni" value="9750000">
+
+    <button onclick="hitungSaldoTambahan()">Hitung Kebutuhan</button>
+
+    <div class="result" id="hasil"></div>
+  </div>
+
+  <script>
+    function hitungSelisihHari(tanggal1, tanggal2) {
+      const t1 = new Date(tanggal1);
+      const t2 = new Date(tanggal2);
+      return Math.floor((t2 - t1) / (1000 * 60 * 60 * 24));
+    }
+
+    function hitungSaldoTambahan() {
+      const tanggalAwal = document.getElementById('tanggalAwal').value;
+      const tanggalSetor = document.getElementById('tanggalSetor').value;
+      const tanggalTarget = document.getElementById('tanggalTarget').value;
+      const targetDas = parseFloat(document.getElementById('targetDas').value);
+      const dasSaatIni = parseFloat(document.getElementById('dasSaatIni').value);
+
+      const hariBerjalan = hitungSelisihHari(tanggalAwal, tanggalSetor);
+      const hariTersisa = hitungSelisihHari(tanggalSetor, tanggalTarget) + 1;
+      const totalHari = hitungSelisihHari(tanggalAwal, tanggalTarget) + 1;
+
+      const tambahanPerHari = ((targetDas * totalHari) - (dasSaatIni * hariBerjalan)) / hariTersisa;
+      const tambahanSekaliSetor = tambahanPerHari * hariTersisa;
+
+      document.getElementById('hasil').innerHTML = `
+        Tambahan saldo harian: <strong>Rp ${tambahanPerHari.toLocaleString('id-ID')}</strong><br>
+        Tambahan jika setor sekali pada ${tanggalSetor}: <strong>Rp ${tambahanSekaliSetor.toLocaleString('id-ID')}</strong><br>
+        (DAS akan tercapai pada ${tanggalTarget})
+      `;
+    }
+  </script>
+</body>
+</html>
