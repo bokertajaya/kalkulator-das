@@ -21,7 +21,7 @@
     label {
       font-weight: bold;
     }
-    input, button {
+    input, select, button {
       width: 100%;
       padding: 8px;
       margin: 10px 0 20px;
@@ -41,20 +41,20 @@
   <div class="container">
     <h2>Kalkulator Tambahan Saldo DAS</h2>
 
-    <label for="tanggalAwal">Tanggal Awal Periode (dd-mm-yyyy)</label>
-    <input type="text" id="tanggalAwal" placeholder="01-01-2025">
+    <label for="tanggalAwal">Tanggal Awal Periode</label>
+    <input type="date" id="tanggalAwal" value="2025-01-01">
 
-    <label for="tanggalSetor">Tanggal Penyetoran Dana Tambahan (dd-mm-yyyy)</label>
-    <input type="text" id="tanggalSetor" placeholder="21-04-2025">
+    <label for="tanggalSetor">Tanggal Penyetoran Dana Tambahan</label>
+    <input type="date" id="tanggalSetor" value="2025-01-01">
 
-    <label for="tanggalTarget">Tanggal Target DAS Tercapai (dd-mm-yyyy)</label>
-    <input type="text" id="tanggalTarget" placeholder="30-04-2025">
+    <label for="tanggalTarget">Tanggal Target DAS Tercapai</label>
+    <input type="date" id="tanggalTarget" value="2025-01-01">
 
     <label for="targetDas">Target Daily Average Saldo (Rp)</label>
-    <input type="number" id="targetDas" value="10000000">
+    <input type="number" id="targetDas" value="0" step="0.1">
 
     <label for="dasSaatIni">DAS Saat Ini (Rp)</label>
-    <input type="number" id="dasSaatIni" value="9750000">
+    <input type="number" id="dasSaatIni" value="0" step="0.1">
 
     <button onclick="hitungSaldoTambahan()">Hitung Kebutuhan</button>
 
@@ -62,18 +62,13 @@
   </div>
 
   <script>
-    function parseTanggalDMY(str) {
-      const [dd, mm, yyyy] = str.split('-').map(Number);
-      return new Date(yyyy, mm - 1, dd);
-    }
-
     function formatRupiah(number) {
       return number.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     }
 
     function hitungSelisihHari(tanggal1, tanggal2) {
-      const t1 = parseTanggalDMY(tanggal1);
-      const t2 = parseTanggalDMY(tanggal2);
+      const t1 = new Date(tanggal1);
+      const t2 = new Date(tanggal2);
       return Math.floor((t2 - t1) / (1000 * 60 * 60 * 24));
     }
 
