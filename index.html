@@ -12,7 +12,7 @@
     }
     .container {
       background: white;
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
       padding: 30px;
       border-radius: 12px;
@@ -29,11 +29,19 @@
       border-radius: 8px;
     }
     .result {
-      font-size: 1.2em;
+      font-size: 1.1em;
       background: #e0f7fa;
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
-      text-align: center;
+      text-align: left;
+    }
+    .note {
+      font-size: 0.95em;
+      color: #333;
+      margin-bottom: 20px;
+      background: #fff3cd;
+      padding: 10px;
+      border-left: 5px solid #ffeeba;
     }
   </style>
 </head>
@@ -41,20 +49,33 @@
   <div class="container">
     <h2>Kalkulator Tambahan Saldo DAS</h2>
 
+    <div class="note">
+      <strong>Penjelasan:</strong><br>
+      Kalkulator ini digunakan untuk menghitung kebutuhan tambahan saldo harian <em>(top-up harian)</em> dan simulasi setoran satu kali <em>(yang bisa ditarik kembali pada hari berikutnya)</em> agar mencapai target <strong>Daily Average Saldo (DAS)</strong> pada tanggal tertentu.<br><br>
+      Misalnya, jika pada tanggal 20 April 2025 diketahui:<br>
+      - Posisi tabungan: Rp 10.100.000<br>
+      - DAS saat ini: Rp 9.850.000<br>
+      - Target DAS per 30 April 2025 adalah Rp 10.000.000<br>
+      Maka kalkulator akan menghitung berapa tambahan harian yang dibutuhkan dan berapa setoran satu kali pada tanggal tertentu agar target tercapai.
+    </div>
+
     <label for="tanggalAwal">Tanggal Awal Periode</label>
     <input type="date" id="tanggalAwal" value="2025-01-01">
 
-    <label for="tanggalSetor">Tanggal Penyetoran Dana Tambahan</label>
-    <input type="date" id="tanggalSetor" value="2025-01-01">
+    <label for="tanggalLaporan">Tanggal Posisi (Laporan Terakhir)</label>
+    <input type="date" id="tanggalLaporan" value="2025-04-20">
 
-    <label for="tanggalTarget">Tanggal Target DAS Tercapai</label>
-    <input type="date" id="tanggalTarget" value="2025-01-01">
-
-    <label for="targetDas">Target Daily Average Saldo (Rp)</label>
-    <input type="number" id="targetDas" value="0" step="0.1">
+    <label for="posisiSaldo">Posisi Tabungan Saat Ini (Rp)</label>
+    <input type="number" id="posisiSaldo" value="10100000" step="0.1">
 
     <label for="dasSaatIni">DAS Saat Ini (Rp)</label>
-    <input type="number" id="dasSaatIni" value="0" step="0.1">
+    <input type="number" id="dasSaatIni" value="9850000" step="0.1">
+
+    <label for="tanggalTarget">Tanggal Target DAS Tercapai</label>
+    <input type="date" id="tanggalTarget" value="2025-04-30">
+
+    <label for="targetDas">Target Daily Average Saldo (Rp)</label>
+    <input type="number" id="targetDas" value="10000000" step="0.1">
 
     <button onclick="hitungSaldoTambahan()">Hitung Kebutuhan</button>
 
@@ -74,22 +95,38 @@
 
     function hitungSaldoTambahan() {
       const tanggalAwal = document.getElementById('tanggalAwal').value;
-      const tanggalSetor = document.getElementById('tanggalSetor').value;
+      const tanggalLaporan = document.getElementById('tanggalLaporan').value;
       const tanggalTarget = document.getElementById('tanggalTarget').value;
+
       const targetDas = parseFloat(document.getElementById('targetDas').value);
       const dasSaatIni = parseFloat(document.getElementById('dasSaatIni').value);
+      const posisiSaldo = parseFloat(document.getElementById('posisiSaldo').value);
 
-      const hariBerjalan = hitungSelisihHari(tanggalAwal, tanggalSetor);
-      const hariTersisa = hitungSelisihHari(tanggalSetor, tanggalTarget) + 1;
-      const totalHari = hitungSelisihHari(tanggalAwal, tanggalTarget) + 1;
+      const hariSampaiLaporan = hitungSelisihHari(tanggalAwal, tanggalLaporan) + 1;
+      const hariMenujuTarget = hitungSelisihHari(tanggalLaporan, tanggalTarget);
+      const totalHari = hariSampaiLaporan + hariMenujuTarget;
 
-      const tambahanPerHari = ((targetDas * totalHari) - (dasSaatIni * hariBerjalan)) / hariTersisa;
-      const tambahanSekaliSetor = tambahanPerHari * hariTersisa;
+      const totalSaldoSaatIni = dasSaatIni * hariSampaiLaporan;
+      const kebutuhanTotal = targetDas * totalHari;
+      const sisaSaldoYangHarusDitambahkan = kebutuhanTotal - totalSaldoSaatIni;
+
+      const tambahanPerHari = sisaSaldoYangHarusDitambahkan / hariMenujuTarget;
+
+      let detailTambahanTanggal = "";
+      for (let i = 0; i < hariMenujuTarget; i++) {
+        const t = new Date(tanggalLaporan);
+        t.setDate(t.getDate() + i + 1);
+        const tFormatted = t.toISOString().split('T')[0];
+        const totalTambahan = tambahanPerHari * (hariMenujuTarget - i);
+        detailTambahanTanggal += `Jika setor <strong>sekali</strong> pada ${tFormatted} → <strong>Rp ${formatRupiah(totalTambahan)}</strong> (dan ditarik keesokan harinya)<br>`;
+      }
 
       document.getElementById('hasil').innerHTML = `
-        Tambahan saldo harian: <strong>Rp ${formatRupiah(tambahanPerHari)}</strong><br>
-        Tambahan jika setor sekali pada ${tanggalSetor}: <strong>Rp ${formatRupiah(tambahanSekaliSetor)}</strong><br>
-        (DAS akan tercapai pada ${tanggalTarget})
+        <strong>Hasil Perhitungan:</strong><br>
+        Total hari dari ${tanggalAwal} s.d. ${tanggalTarget}: <strong>${totalHari} hari</strong><br>
+        Tambahan saldo harian yang dibutuhkan mulai ${tanggalLaporan} s.d. ${tanggalTarget}: <strong>Rp ${formatRupiah(tambahanPerHari)}</strong> per hari<br><br>
+        <strong>Simulasi Setoran Sekali (dan bisa ditarik kembali di hari berikutnya):</strong><br>
+        ${detailTambahanTanggal}
       `;
     }
   </script>
